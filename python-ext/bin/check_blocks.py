@@ -10,22 +10,16 @@ General Public License for more details. You should have received a copy of the 
 Public License along with this program. If not, see http://www.gnu.org/licenses/.
 """
 
-import _quickblocks as qbe
-import json
+import sys
+from quickblocks import QuickBlocks
+from tqdm import tqdm
+from multiprocessing.dummy import Pool as ThreadPool 
 
-class QuickBlocks(object):
-    def __init__(self, url, cache):
-        qbe.init(url)
-        self.cache = True
-
-    def check_block(self, blockNum, fix=True):
-        qbe.check_block(blockNum, fix)
-
-    def __getitem__(self, blockNum):
-        block = qbe.get_block(blockNum, self.cache)
-        if block:
-            return json.loads(block)
-        return None
-
-    def __del__(self):
-        qbe.cleanup()
+qb = QuickBlocks(sys.argv[1], cache=True)
+for i in tqdm(range(int(sys.argv[2]), int(sys.argv[3]))):
+    block = qb.check_block(i)
+# n_workers = 8
+# chunk = 1000
+# pool = ThreadPool(n_workers) 
+# for i in tqdm(range(int(sys.argv[2]), int(sys.argv[3]), chunk)):
+#     pool.map(qb.__getItem__, range(i, i+chunk))

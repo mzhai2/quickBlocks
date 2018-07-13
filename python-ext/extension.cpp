@@ -40,13 +40,40 @@ static PyObject* get_block(PyObject* self, PyObject *args) {
     getBlock(block, i);
     block.finalized = true;
     if (cache) {
-	writeBlockToBinary(block, getBinaryFilename(i));
+        writeBlockToBinary(block, getBinaryFilename(i));
     }
     return Py_BuildValue("s", block.Format().c_str());
 }
 
+static PyObject* check_block(PyObject* self, PyObject *args) {
+    int i;
+    int fix;
+    if (!PyArg_ParseTuple(args, "ip", &i, &fix)) {
+        return NULL;
+    }
+    CBlock block;
+    getCurlContext()->provider = "local";
+    queryBlock(block, asStringU(i), true, false);
+    block.finalized = true;
+
+    CBlock saved_block;
+    getCurlContext()->provider = "binary";
+    queryBlock(saved_block, asStringU(i), true, false);
+    if (block != saved_block) {
+        cout << i << "\nsaved";
+        cout << saved_block << "\nnew";
+        cout << block << "\n";
+	if (fix) {
+           writeBlockToBinary(block, getBinaryFilename(i));
+        }
+    }
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
 static PyMethodDef _quickblocks_methods[] = {
     {"get_block", get_block, METH_VARARGS, "get_block"},
+    {"check_block", check_block, METH_VARARGS, "check_block"},
     {"init", init, METH_VARARGS, "init"},
     {"cleanup", cleanup, METH_VARARGS, "cleanup"},
     {NULL, NULL, 0, NULL}
